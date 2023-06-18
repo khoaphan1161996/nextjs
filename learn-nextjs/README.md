@@ -1,34 +1,66 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+1. File-system Routing
+   const router = useRouter() : hook
 
-## Getting Started
+- pathname: Current route
+- query: The query string parsed to an object
+- basePath: The active basePath (if enabled)
+- locale: The active locale (if enabled)
+- isFallback: Whether the current page is in fallback mode
 
-First, run the development server:
+  1.1. Multiple parameters
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+- pages/categories/[categoryId](folder)/posts/[postId].tsx :
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* URL: /categories/123/posts/456
+  router.query: { categoryId: '123', postId: '456' }
+* URL : /categories/frontend/posts/js
+  router.query: { categoryId: 'frontend', postId: 'js' }
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  1.2. Catch all routes
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- pages/posts/[...slug].tsx
 
-## Learn More
+* URL : /posts/123
+  router.query: {slug: ['123']}
+* URL: /posts/easy-nextjs
+  router.query: {slug: ['easy-nextjs']}
+* URL: /posts/easy/frontend
+  router.query: {slug: ['easy','frontend']}
 
-To learn more about Next.js, take a look at the following resources:
+nhưng nó ko match đường dẫn /posts, không gọi file slug
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.3. Optional catch all routes: giống thẳng ở trên nhưng match posts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- pages/posts/[[...slug]].tsx
 
-## Deploy on Vercel
+2. Navigation between pages
+   import Link from 'next/link'
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2.1 Các thuộc tính của hàm router
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- router.push(): Handles client-side transitions
+- router.replace(): prevent adding a new URL entry into the history stack
+- router.prefetch(): Prefetch pages for faster client-side transitions: down về file trước khi qua trang khác
+- router.back(): Navigate back in history
+- router.reload(): executes window.location.reload()
+
+  2.2 CSR, SSR, SSG
+
+- SSG Good, but build-time ONLY 😭
+- CSR Good for private app
+- SSR Latest data as always, performance concerns
+- ISR SSG + able to generate HTML on demand
+
+CSR: user gửi request, trả về dữ liệu, render html ở phía client
+SSR: user gửi request, trả về html tương ứng với request
+SSG: tạo tất cả file html khi build, user gửi request gì thì trả về (chậm khi build, cực nhanh khi load app)
+
+2.3 getStaticProps : dùng khi muốn file html khi sử dụng có sẵn dữ liệu (vd: fetch api và truyền vào props cho file html trước khi sử dụng)
+2.4 getStaticPaths : dùng với getStaticProps, dùng khi sử dụng dynamic route
+
+2.5 SSG and Data Fetching on client side : dynamic ssr=false, shallow,
+
+- Dùng dynamic ssr=false trong trường hợp muốn page có SSG tĩnh tạo ra html ko có dữ liệu và chỉ fetch data ở client side ( có những compo chỉ render ở client(có thể do hàm chỉ có ở client - window.reload))
+- Trong trường hợp compo đó dùng router.push qua, và ta ko muốn khi gọi hàm sẽ gọi lại getStaticProps ở sv, thì ta truyền shallow = true ở tham số thứ 3
+
+  2.6 server side props với cache ( coi docs )
